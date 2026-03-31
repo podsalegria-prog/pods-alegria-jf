@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pods Alegria - Venda Máxima</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Poppins;}
+body{background:#0b0b0b;color:white;}
+header{display:flex;justify-content:space-between;align-items:center;padding:20px 8%;background:#111;border-bottom:1px solid #222;}
+.logo{font-size:26px;color:#ff0000;font-weight:700;}
+.hero{height:100vh;display:flex;justify-content:center;align-items:center;text-align:center;background:linear-gradient(#000,#0b0b0b);}
+.hero h1{font-size:60px;color:#ff0000;}
+.btn{margin-top:25px;padding:14px 30px;background:#ff0000;color:black;border:none;border-radius:10px;cursor:pointer;}
+.produtos,.sabores{padding:60px 8%;display:none;}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:30px;}
+.card{background:#161616;border-radius:20px;padding:25px;text-align:center;transition:0.4s;}
+.card:hover{transform:scale(1.05);}
+.preco{color:#ff0000;margin:10px 0;}
+.add{background:#ff0000;color:black;padding:10px;border-radius:6px;cursor:pointer;}
+.esgotado{background:#444 !important;color:#999 !important;cursor:not-allowed;}
+.carrinho{position:fixed;top:0;right:0;width:320px;height:100%;background:#0f0f0f;padding:20px;overflow:auto;border-left:2px solid #ff0000;}
+.item{margin-bottom:10px;border-bottom:1px solid #333;padding-bottom:5px;}
+.qtd{display:flex;justify-content:center;gap:10px;margin-top:5px;}
+.qtd button{background:#ff0000;border:none;padding:5px;color:black;cursor:pointer;}
+.finalizar{margin-top:20px;background:#25D366;padding:12px;text-align:center;border-radius:6px;cursor:pointer;font-weight:600;}
+.fixo{position:fixed;bottom:20px;left:20px;background:#25D366;padding:15px 20px;border-radius:50px;font-weight:600;cursor:pointer;}
+.popup{position:fixed;top:20px;left:20px;background:#111;padding:10px;border-radius:8px;font-size:12px;opacity:0;transition:0.5s;}
+.timer{color:#ff0000;margin-top:10px;font-size:18px;}
+input{width:100%;padding:10px;margin-top:10px;border:none;border-radius:6px;background:#1a1a1a;color:white;}
+.animacaoCupom{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);background:#111;padding:30px;border-radius:15px;border:2px solid #ff0000;text-align:center;font-size:18px;opacity:0;transition:0.4s;}
+</style>
+</head>
+<body>
+<header>
+<div class="logo">🔥 Pods Alegria</div>
+</header>
+
+<section class="hero" id="inicio">
+<div>
+<h1>OFERTA LIMITADA</h1>
+<p>🔥 Alta demanda hoje</p>
+<div class="timer" id="timer"></div>
+<button class="btn" onclick="abrirProdutos()">Comprar Agora</button>
+</div>
+</section>
+
+<section class="produtos" id="produtos">
+<h2>Marcas</h2>
+<div class="grid">
+<div class="card" onclick="mostrarModelos()"><h3>IGNITE</h3></div>
+</div>
+</section>
+
+<section class="sabores" id="sabores">
+<h2 id="titulo"></h2>
+<div class="grid" id="lista"></div>
+</section>
+
+<div class="carrinho">
+<h2>🛒 Carrinho</h2>
+<input type="text" id="cupom" placeholder="Cupom">
+<div id="itens"></div>
+<h3 id="frete">Frete: R$10</h3>
+<h3 id="total">Total: R$0</h3>
+<div class="finalizar" onclick="finalizarCompra()">Finalizar no WhatsApp</div>
+</div>
+
+<div class="fixo" onclick="abrirProdutos()">🔥 Comprar Agora</div>
+<div class="popup" id="popup"></div>
+<div class="animacaoCupom" id="animacao">💋 Obrigado por usar o cupom MY EGGS!</div>
+
+<script>
+const dados={
+V400:[{name:'Maçã Verde',preco:120},{name:'Uva Ice',preco:120}],
+V300:[{name:'Menta',preco:110,esgotado:true},{name:'Uva',preco:110,esgotado:true},{name:'Blueberry',preco:110,esgotado:true},{name:'Banana',preco:110,esgotado:true},{name:'Maçã Verde',preco:110,esgotado:true},{name:'Hortelã',preco:110,esgotado:true}],
+V155:[{name:'Banana',preco:90},{name:'Tropical Açaí',preco:90},{name:'Hortelã Ice',preco:90},{name:'Uva Ice',preco:90},{name:'Blueberry Ice',preco:90},{name:'Kiwi Maracujá Goiabada',preco:90}]
+};
+
+let carrinho=[];
+let cupomAtivo=false;
+
+function abrirProdutos(){
+document.getElementById('inicio').style.display='none';
+document.getElementById('produtos').style.display='block';
+}
+
+function mostrarModelos(){
+let lista=document.getElementById('lista');
+lista.innerHTML='';
+document.getElementById('titulo').innerText='Modelos';
+Object.keys(dados).forEach(m=>{
+lista.innerHTML+=`<div class="card" onclick="mostrarSabores('${m}')"><h3>${m}</h3></div>`
+});
+document.getElementById('sabores').style.display='block';
+}
+
+function mostrarSabores(modelo){
+let lista=document.getElementById('lista');
+lista.innerHTML='';
+document.getElementById('titulo').innerText=modelo;
+
+dados[modelo].forEach(i=>{
+lista.innerHTML+=`<div class="card">
+<h3>${i.name}</h3>
+<div class="preco">R$${i.preco}</div>
+<div class="add ${i.esgotado?'esgotado':''}" onclick="${i.esgotado?'':'add(\''+modelo+'\',\''+i.name+'\','+i.preco+')'}">
+${i.esgotado?'Esgotado':'Adicionar'}
+</div>
+</div>`
+});
+}
+
+function add(m,n,p){
+let e=carrinho.find(i=>i.nome===n && i.modelo===m);
+if(e){e.qtd++;}else{carrinho.push({modelo:m,nome:n,preco:p,qtd:1});}
+update();
+}
+
+function alterar(m,n,d){
+let i=carrinho.find(x=>x.nome===n && x.modelo===m);
+i.qtd+=d;
+if(i.qtd<=0){carrinho=carrinho.filter(x=>!(x.nome===n && x.modelo===m));}
+update();
+}
+
+function update(){
+let d=document.getElementById('itens');
+d.innerHTML='';
+let t=0;
+
+carrinho.forEach(i=>{
+t+=i.preco*i.qtd;
+d.innerHTML+=`<div class="item">
+${i.modelo} - ${i.nome}
+<div class="qtd">
+<button onclick="alterar('${i.modelo}','${i.nome}',-1)">-</button>
+<span>${i.qtd}</span>
+<button onclick="alterar('${i.modelo}','${i.nome}',1)">+</button>
+</div>
+R$${i.preco*i.qtd}
+</div>`;
+});
+
+let cupom=document.getElementById('cupom').value.trim();
+let frete=10;
+
+if(cupom==='MY EGGS'){
+frete=0;
+document.getElementById('frete').innerText='Frete: GRÁTIS';
+if(!cupomAtivo){mostrarAnimacao(); cupomAtivo=true;}
+}else{
+document.getElementById('frete').innerText='Frete: R$10';
+cupomAtivo=false;
+}
+
+document.getElementById('total').innerText='Total: R$'+(t+frete);
+}
+
+function finalizarCompra(){
+if(carrinho.length==0){alert('Carrinho vazio');return;}
+
+let cupom=document.getElementById('cupom').value.trim();
+let msg='';
+
+carrinho.forEach(i=>{
+msg+=`eu quero ${i.modelo} sabor ${i.nome} (x${i.qtd})\n`;
+});
+
+if(cupom==='MY EGGS'){
+msg+=`Frete grátis aplicado com cupom MY EGGS 💋`;
+}
+
+let link=`https://wa.me/message/MSI3WBJSIRCWI1?text=${encodeURIComponent(msg)}`;
+window.open(link,'_blank');
+}
+
+function mostrarAnimacao(){
+let a=document.getElementById('animacao');
+a.style.opacity=1;
+a.style.transform='translate(-50%,-50%) scale(1)';
+setTimeout(()=>{
+a.style.opacity=0;
+a.style.transform='translate(-50%,-50%) scale(0)';
+},2000);
+}
+
+// atualizar ao digitar cupom
+document.getElementById('cupom').addEventListener('input',update);
+
+// TIMER
+let tempo=600;
+setInterval(()=>{
+let m=Math.floor(tempo/60);
+let s=tempo%60;
+document.getElementById('timer').innerText=`Promo acaba em ${m}:${s<10?'0'+s:s}`;
+tempo--;
+if(tempo<=0)tempo=600;
+},1000);
+
+// POPUP
+let nomes=['Lucas','Ana','Pedro','Julia','Marcos'];
+setInterval(()=>{
+let p=document.getElementById('popup');
+let n=nomes[Math.floor(Math.random()*nomes.length)];
+p.innerText=`${n} comprou agora 🔥`;
+p.style.opacity=1;
+setTimeout(()=>p.style.opacity=0,3000);
+},4000);
+</script>
+</body>
+</html>
