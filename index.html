@@ -20,19 +20,55 @@ header{display:flex;justify-content:space-between;align-items:center;padding:20p
 .preco{color:#ff0000;margin:10px 0;}
 .add{background:#ff0000;color:black;padding:10px;border-radius:6px;cursor:pointer;}
 .esgotado{background:#444 !important;color:#999 !important;cursor:not-allowed;}
-.carrinho{position:fixed;top:0;right:0;width:320px;height:100%;background:#0f0f0f;padding:20px;overflow:auto;border-left:2px solid #ff0000;}
+
+.carrinho{
+position:fixed;
+top:0;
+right:0;
+width:320px;
+height:100%;
+background:#0f0f0f;
+padding:20px;
+overflow:auto;
+border-left:2px solid #ff0000;
+transition:0.4s;
+}
+
+.btn-carrinho{
+position:fixed;
+bottom:20px;
+right:20px;
+background:#ff0000;
+color:black;
+font-size:22px;
+padding:15px;
+border-radius:50%;
+cursor:pointer;
+box-shadow:0 0 15px rgba(0,0,0,0.5);
+z-index:999;
+}
+
+.contador{
+position:absolute;
+top:-5px;
+right:-5px;
+background:#25D366;
+color:black;
+font-size:12px;
+padding:4px 6px;
+border-radius:50%;
+font-weight:bold;
+}
+
 .item{margin-bottom:10px;border-bottom:1px solid #333;padding-bottom:5px;}
 .qtd{display:flex;justify-content:center;gap:10px;margin-top:5px;}
 .qtd button{background:#ff0000;border:none;padding:5px;color:black;cursor:pointer;}
 .finalizar{margin-top:20px;background:#25D366;padding:12px;text-align:center;border-radius:6px;cursor:pointer;font-weight:600;}
-.fixo{position:fixed;bottom:20px;left:20px;background:#25D366;padding:15px 20px;border-radius:50px;font-weight:600;cursor:pointer;}
-.popup{position:fixed;top:20px;left:20px;background:#111;padding:10px;border-radius:8px;font-size:12px;opacity:0;transition:0.5s;}
-.timer{color:#ff0000;margin-top:10px;font-size:18px;}
 input{width:100%;padding:10px;margin-top:10px;border:none;border-radius:6px;background:#1a1a1a;color:white;}
-.animacaoCupom{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);background:#111;padding:30px;border-radius:15px;border:2px solid #ff0000;text-align:center;font-size:18px;opacity:0;transition:0.4s;}
 </style>
 </head>
 <body>
+
 <header>
 <div class="logo">🔥 Pods Alegria</div>
 </header>
@@ -40,8 +76,6 @@ input{width:100%;padding:10px;margin-top:10px;border:none;border-radius:6px;back
 <section class="hero" id="inicio">
 <div>
 <h1>OFERTA LIMITADA</h1>
-<p>🔥 Alta demanda hoje</p>
-<div class="timer" id="timer"></div>
 <button class="btn" onclick="abrirProdutos()">Comprar Agora</button>
 </div>
 </section>
@@ -58,7 +92,7 @@ input{width:100%;padding:10px;margin-top:10px;border:none;border-radius:6px;back
 <div class="grid" id="lista"></div>
 </section>
 
-<div class="carrinho">
+<div class="carrinho" id="carrinho">
 <h2>🛒 Carrinho</h2>
 <input type="text" id="cupom" placeholder="Cupom">
 <div id="itens"></div>
@@ -67,19 +101,26 @@ input{width:100%;padding:10px;margin-top:10px;border:none;border-radius:6px;back
 <div class="finalizar" onclick="finalizarCompra()">Finalizar no WhatsApp</div>
 </div>
 
-<div class="fixo" onclick="abrirProdutos()">🔥 Comprar Agora</div>
-<div class="popup" id="popup"></div>
-<div class="animacaoCupom" id="animacao">💋 Obrigado por usar o cupom MY EGGS!</div>
+<div class="btn-carrinho" onclick="toggleCarrinho()">
+🛒
+<div class="contador" id="contador">0</div>
+</div>
 
 <script>
 const dados={
 V400:[{name:'Maçã Verde',preco:120},{name:'Uva Ice',preco:120}],
-V300:[{name:'Menta',preco:110,esgotado:true},{name:'Uva',preco:110,esgotado:true},{name:'Blueberry',preco:110,esgotado:true},{name:'Banana',preco:110,esgotado:true},{name:'Maçã Verde',preco:110,esgotado:true},{name:'Hortelã',preco:110,esgotado:true}],
+V300:[{name:'Menta',preco:110,esgotado:true}],
 V155:[{name:'Banana',preco:90},{name:'Tropical Açaí',preco:90},{name:'Hortelã Ice',preco:90},{name:'Uva Ice',preco:90},{name:'Blueberry Ice',preco:90},{name:'Kiwi Maracujá Goiabada',preco:90}]
 };
 
 let carrinho=[];
+let carrinhoAberto=true;
 let cupomAtivo=false;
+
+function toggleCarrinho(){
+let c=document.getElementById('carrinho');
+if(carrinhoAberto){c.style.right='-350px';carrinhoAberto=false;}else{c.style.right='0';carrinhoAberto=true;}
+}
 
 function abrirProdutos(){
 document.getElementById('inicio').style.display='none';
@@ -129,9 +170,11 @@ function update(){
 let d=document.getElementById('itens');
 d.innerHTML='';
 let t=0;
+let totalItens=0;
 
 carrinho.forEach(i=>{
 t+=i.preco*i.qtd;
+totalItens+=i.qtd;
 d.innerHTML+=`<div class="item">
 ${i.modelo} - ${i.nome}
 <div class="qtd">
@@ -149,25 +192,25 @@ let frete=10;
 if(cupom==='MY EGGS'){
 frete=0;
 document.getElementById('frete').innerText='Frete: GRÁTIS';
-if(!cupomAtivo){mostrarAnimacao(); cupomAtivo=true;}
+cupomAtivo=true;
 }else{
 document.getElementById('frete').innerText='Frete: R$10';
 cupomAtivo=false;
 }
 
 document.getElementById('total').innerText='Total: R$'+(t+frete);
+document.getElementById('contador').innerText=totalItens;
 }
 
 function finalizarCompra(){
 if(carrinho.length==0){alert('Carrinho vazio');return;}
-
-let cupom=document.getElementById('cupom').value.trim();
 let msg='';
 
 carrinho.forEach(i=>{
 msg+=`eu quero ${i.modelo} sabor ${i.nome} (x${i.qtd})\n`;
 });
 
+let cupom=document.getElementById('cupom').value.trim();
 if(cupom==='MY EGGS'){
 msg+=`Frete grátis aplicado com cupom MY EGGS 💋`;
 }
@@ -176,38 +219,8 @@ let link=`https://wa.me/message/MSI3WBJSIRCWI1?text=${encodeURIComponent(msg)}`;
 window.open(link,'_blank');
 }
 
-function mostrarAnimacao(){
-let a=document.getElementById('animacao');
-a.style.opacity=1;
-a.style.transform='translate(-50%,-50%) scale(1)';
-setTimeout(()=>{
-a.style.opacity=0;
-a.style.transform='translate(-50%,-50%) scale(0)';
-},2000);
-}
-
-// atualizar ao digitar cupom
 document.getElementById('cupom').addEventListener('input',update);
-
-// TIMER
-let tempo=600;
-setInterval(()=>{
-let m=Math.floor(tempo/60);
-let s=tempo%60;
-document.getElementById('timer').innerText=`Promo acaba em ${m}:${s<10?'0'+s:s}`;
-tempo--;
-if(tempo<=0)tempo=600;
-},1000);
-
-// POPUP
-let nomes=['Lucas','Ana','Pedro','Julia','Marcos'];
-setInterval(()=>{
-let p=document.getElementById('popup');
-let n=nomes[Math.floor(Math.random()*nomes.length)];
-p.innerText=`${n} comprou agora 🔥`;
-p.style.opacity=1;
-setTimeout(()=>p.style.opacity=0,3000);
-},4000);
 </script>
+
 </body>
 </html>
